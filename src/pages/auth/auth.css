@@ -1,0 +1,179 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f3f4f6;
+  /* Very light gray, clean and formal */
+  background-image:
+    linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  padding: 24px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  position: relative;
+}
+
+/* Subtle separator line or watermark effect if needed, but keeping it clean for now */
+
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+  border-radius: 8px !important;
+  /* Sharper corners for a more formal look */
+  z-index: 1;
+  padding: 12px;
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.auth-logo {
+  width: 80px;
+  /* More discrete and professional */
+  margin-bottom: 24px;
+  filter: none;
+  /* Original colors for a professional look */
+}
+
+.auth-header h2 {
+  margin-bottom: 8px !important;
+  color: #111827 !important;
+  /* Very dark gray, almost black */
+  font-weight: 700 !important;
+  font-size: 22px !important;
+  letter-spacing: -0.02em;
+}
+
+.auth-header .ant-typography-secondary {
+  color: #4b5563 !important;
+  font-size: 14px !important;
+  font-weight: 400;
+}
+
+.ant-form-item-label label {
+  font-weight: 600 !important;
+  color: #374151 !important;
+  font-size: 14px !important;
+}
+
+.ant-input-affix-wrapper,
+.ant-input-password {
+  background-color: #ffffff !important;
+  border-radius: 6px !important;
+  padding: 10px 14px !important;
+  border: 1px solid #d1d5db !important;
+  transition: all 0.2s ease !important;
+  color: #111827 !important;
+}
+
+.ant-input-affix-wrapper:hover {
+  border-color: #9ca3af !important;
+}
+
+.ant-input-affix-wrapper-focused {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1) !important;
+}
+
+.ant-input {
+  background-color: transparent !important;
+  color: #111827 !important;
+  font-size: 15px !important;
+}
+
+.ant-input::placeholder {
+  color: #9ca3af !important;
+}
+
+.ant-btn-primary {
+  height: 44px !important;
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+  font-size: 15px !important;
+  background-color: #111827 !important;
+  /* Deep black/blue for maximum formality */
+  border: none !important;
+  box-shadow: none !important;
+  margin-top: 8px;
+  transition: all 0.2s ease !important;
+}
+
+.ant-btn-primary:hover {
+  background-color: #1f2937 !important;
+  transform: none;
+}
+
+.auth-link {
+  color: #2563eb !important;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.auth-link:hover {
+  text-decoration: underline !important;
+}
+
+.auth-footer {
+  text-align: center;
+  margin-top: 32px;
+  border-top: 1px solid #f3f4f6;
+  padding-top: 24px;
+}
+
+.auth-footer .ant-typography-secondary {
+  color: #6b7280 !important;
+  font-size: 12px !important;
+  letter-spacing: 0.01em;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.auth-card {
+  animation: fadeIn 0.4s ease-in forwards;
+}
+
+/* Ant Design Result component overrides for light theme */
+.ant-result-title {
+  color: #111827 !important;
+}
+
+.ant-result-subtitle {
+  color: #4b5563 !important;
+}
+
+.ant-result-success .ant-result-icon>.anticon {
+  color: #10b981 !important;
+  /* Success Green */
+}
+
+@media (max-width: 576px) {
+  .auth-card {
+    border-radius: 0 !important;
+    min-height: 100vh;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    animation: none;
+  }
+
+  .auth-container {
+    padding: 0;
+  }
+}
