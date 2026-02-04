@@ -230,7 +230,7 @@ const DashboardPage: React.FC = () => {
         />
       </Card>
 
-      <Card title="Mapa de Ubicaciones" style={{ marginTop: 16 }}>
+      {/* <Card title="Mapa de Ubicaciones" style={{ marginTop: 16 }}>
         <GoogleMap
           markers={activeOrders
             .filter((order) => {
@@ -241,12 +241,12 @@ const DashboardPage: React.FC = () => {
             .map((order) => ({
               lat: 0, // TODO: Obtener de order.latest_report.latitude
               lng: 0, // TODO: Obtener de order.latest_report.longitude
-              title: order.order_number,
+              title: order.order_number || '',
               info: `${order.client?.company_name} - ${order.vehicle?.license_plate}`,
             }))}
           height={400}
         />
-      </Card>
+      </Card> */}
     </div>
   )
 }
