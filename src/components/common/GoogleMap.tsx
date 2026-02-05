@@ -1,5 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Spin } from 'antd'
+
+// Declaración para window.google
+declare global {
+  interface Window {
+    google: typeof google
+  }
+}
 
 interface MapMarker {
   lat: number

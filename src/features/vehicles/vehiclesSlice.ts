@@ -213,7 +213,7 @@ const vehiclesSlice = createSlice({
       .addCase(fetchEscortVehicles.pending, (state) => {
         state.loading = true
       })
-      .addCase(fetchEscortVehicles.fulfilled, (state, action) => {
+      .addCase(fetchEscortVehicles.fulfilled, (state) => {
         state.loading = false
         // Podríamos guardar en un array separado si es necesario
       })

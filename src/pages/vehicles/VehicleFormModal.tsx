@@ -130,7 +130,7 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ visible, vehicle, o
                 disabled={user?.role_id !== 1 || loadingClients}
                 loading={loadingClients}
                 filterOption={(input, option) =>
-                  (option?.children as string)?.toLowerCase().includes(input.toLowerCase())
+                  String(option?.children ?? '').toLowerCase().includes(input.toLowerCase())
                 }
                 notFoundContent={loadingClients ? "Cargando..." : "No hay clientes disponibles"}
               >

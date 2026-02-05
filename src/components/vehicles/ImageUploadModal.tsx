@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Modal, Form, Input, Checkbox, message, Button, Space } from 'antd';
+import { Modal, Form, Input, Checkbox, message, Button } from 'antd';
 import { InboxOutlined, DeleteOutlined, FileImageOutlined } from '@ant-design/icons';
 
 interface ImageUploadModalProps {

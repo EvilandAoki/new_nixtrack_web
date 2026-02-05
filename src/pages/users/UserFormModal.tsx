@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import { Modal, Form, Input, Select, Switch, message } from 'antd'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { createUser, updateUser } from '@/features/users/usersSlice'
-import type { User, UserFormData } from '@/types'
+import type { User } from '@/types'
 
 interface UserFormModalProps {
   visible: boolean
@@ -13,7 +13,7 @@ interface UserFormModalProps {
 const UserFormModal: React.FC<UserFormModalProps> = ({ visible, user, onClose }) => {
   const [form] = Form.useForm()
   const dispatch = useAppDispatch()
-  const { isLoading } = useAppSelector((state) => state.users)
+  const { loading } = useAppSelector((state) => state.users)
 
   useEffect(() => {
     if (visible && user) {
@@ -65,7 +65,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ visible, user, onClose })
       open={visible}
       onOk={handleSubmit}
       onCancel={() => onClose()}
-      confirmLoading={isLoading}
+      confirmLoading={loading}
       width={600}
       okText="Guardar"
       cancelText="Cancelar"

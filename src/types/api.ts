@@ -12,6 +12,12 @@ export interface PaginatedResponse<T> {
   page: number
   limit: number
   totalPages: number
+  pagination: {
+    current_page: number
+    per_page: number
+    total: number
+    total_pages: number
+  }
 }
 
 export interface ApiError {

@@ -80,98 +80,105 @@ const usersSlice = createSlice({
     clearError: (state) => {
       state.error = null
     },
-    clearCurrentUser: (state) => {
-      state.currentItem = null
+    clearSelected: (state) => {
+      state.selected = null
     },
   },
   extraReducers: (builder) => {
     // Fetch users
     builder.addCase(fetchUsers.pending, (state) => {
-      state.isLoading = true
+      state.loading = true
       state.error = null
     })
     builder.addCase(fetchUsers.fulfilled, (state, action) => {
-      state.isLoading = false
+      state.loading = false
       state.items = action.payload.items
-      state.total = action.payload.total
-      state.page = action.payload.page
-      state.limit = action.payload.limit
+      state.pagination = {
+        current_page: action.payload.page,
+        per_page: action.payload.limit,
+        total: action.payload.total,
+        total_pages: action.payload.totalPages,
+      }
       state.error = null
     })
     builder.addCase(fetchUsers.rejected, (state, action) => {
-      state.isLoading = false
+      state.loading = false
       state.error = action.payload as string
     })
 
     // Fetch user by id
     builder.addCase(fetchUserById.pending, (state) => {
-      state.isLoading = true
+      state.loading = true
       state.error = null
     })
     builder.addCase(fetchUserById.fulfilled, (state, action) => {
-      state.isLoading = false
-      state.currentItem = action.payload
+      state.loading = false
+      state.selected = action.payload
       state.error = null
     })
     builder.addCase(fetchUserById.rejected, (state, action) => {
-      state.isLoading = false
+      state.loading = false
       state.error = action.payload as string
     })
 
     // Create user
     builder.addCase(createUser.pending, (state) => {
-      state.isLoading = true
+      state.loading = true
       state.error = null
     })
     builder.addCase(createUser.fulfilled, (state, action) => {
-      state.isLoading = false
+      state.loading = false
       state.items.unshift(action.payload)
-      state.total += 1
+      if (state.pagination) {
+        state.pagination.total += 1
+      }
       state.error = null
     })
     builder.addCase(createUser.rejected, (state, action) => {
-      state.isLoading = false
+      state.loading = false
       state.error = action.payload as string
     })
 
     // Update user
     builder.addCase(updateUser.pending, (state) => {
-      state.isLoading = true
+      state.loading = true
       state.error = null
     })
     builder.addCase(updateUser.fulfilled, (state, action) => {
-      state.isLoading = false
+      state.loading = false
       const index = state.items.findIndex((item) => item.id === action.payload.id)
       if (index !== -1) {
         state.items[index] = action.payload
       }
-      if (state.currentItem?.id === action.payload.id) {
-        state.currentItem = action.payload
+      if (state.selected?.id === action.payload.id) {
+        state.selected = action.payload
       }
       state.error = null
     })
     builder.addCase(updateUser.rejected, (state, action) => {
-      state.isLoading = false
+      state.loading = false
       state.error = action.payload as string
     })
 
     // Delete user
     builder.addCase(deleteUser.pending, (state) => {
-      state.isLoading = true
+      state.loading = true
       state.error = null
     })
     builder.addCase(deleteUser.fulfilled, (state, action) => {
-      state.isLoading = false
+      state.loading = false
       state.items = state.items.filter((item) => item.id !== action.payload)
-      state.total -= 1
+      if (state.pagination) {
+        state.pagination.total -= 1
+      }
       state.error = null
     })
     builder.addCase(deleteUser.rejected, (state, action) => {
-      state.isLoading = false
+      state.loading = false
       state.error = action.payload as string
     })
   },
 })
 
-export const { clearError, clearCurrentUser } = usersSlice.actions
+export const { clearError, clearSelected } = usersSlice.actions
 export default usersSlice.reducer

@@ -3,7 +3,6 @@ import { Modal, Form, Input, Select, Upload, Button, message, Space } from 'antd
 import { UploadOutlined, EnvironmentOutlined } from '@ant-design/icons'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { createOrderDetail } from '@/features/orders/orderDetailsSlice'
-import type { OrderDetailFormData } from '@/types'
 import dayjs from 'dayjs'
 
 const { TextArea } = Input

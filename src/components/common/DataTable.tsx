@@ -1,4 +1,3 @@
-import React from 'react'
 import { Table, Button, Space } from 'antd'
 import { FileExcelOutlined, PrinterOutlined } from '@ant-design/icons'
 import type { TableProps } from 'antd'

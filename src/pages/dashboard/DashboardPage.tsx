@@ -11,10 +11,8 @@ import { useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { fetchActiveOrders, clearError } from '@/features/dashboard/dashboardSlice'
 import { formatDateTime } from '@/utils/format'
-import { ORDER_STATUS } from '@/types'
 import type { Order } from '@/types'
 import type { ColumnType } from 'antd/es/table'
-import GoogleMap from '@/components/common/GoogleMap'
 import './dashboard.css'
 
 const DashboardPage: React.FC = () => {

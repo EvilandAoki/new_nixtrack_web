@@ -14,14 +14,6 @@ import OrdersPage from '@/pages/orders/OrdersPage'
 import OrderDetailPage from '@/pages/orders/OrderDetailPage'
 import OrderFormPage from '@/pages/orders/OrderFormPage'
 
-// Placeholder component for development
-const PlaceholderPage = ({ title }: { title: string }) => (
-  <div style={{ padding: '50px', textAlign: 'center' }}>
-    <h1>{title}</h1>
-    <p>Esta página está en desarrollo</p>
-  </div>
-)
-
 // Protected Route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading } = useAppSelector((state) => state.auth)

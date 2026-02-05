@@ -68,7 +68,7 @@ const ClientFormModal: React.FC<ClientFormModalProps> = ({ visible, client, onCl
   const loadCities = async (departmentCode: string) => {
     try {
       console.log('Cargando ciudades para departamento:', departmentCode)
-      const citiesList = await catalogService.getCities(departmentCode)
+      const citiesList = await catalogService.getCities({ departmentCode })
       console.log('Ciudades cargadas:', citiesList)
       setCities(citiesList || [])
     } catch (error: any) {

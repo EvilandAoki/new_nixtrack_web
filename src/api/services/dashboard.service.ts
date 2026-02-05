@@ -1,5 +1,5 @@
 import axiosInstance from '../axios'
-import type { Order, ApiResponse, PaginatedResponse } from '@/types'
+import type { Order, ApiResponse } from '@/types'
 
 export const dashboardService = {
   getActiveOrders: async (clientId?: number): Promise<Order[]> => {
@@ -8,7 +8,7 @@ export const dashboardService = {
     return response.data.data || []
   },
 
-  getDashboardStats: async (clientId?: number) => {
+  getDashboardStats: async (_clientId?: number) => {
     // TODO: Implement when backend endpoint exists
     return {
       totalActive: 0,

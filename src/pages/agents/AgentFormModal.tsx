@@ -163,7 +163,7 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({ visible, agent, onClose
                 loading={loadingVehicles}
                 optionFilterProp="children"
                 filterOption={(input, option) =>
-                  (option?.children as string)?.toLowerCase().includes(input.toLowerCase())
+                  String(option?.children ?? '').toLowerCase().includes(input.toLowerCase())
                 }
               >
                 {escortVehicles.map((vehicle) => (

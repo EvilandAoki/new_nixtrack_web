@@ -96,7 +96,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
 
   const selectedKey = location.pathname
   const openKeys = menuItems
-    .filter((item) => item.children && item.children.some((child) => child.key === selectedKey))
+    .filter((item) => item.children && item.children.some((child: { key: string }) => child.key === selectedKey))
     .map((item) => item.key)
 
   return (

@@ -10,7 +10,7 @@ const RecoverPasswordPage = () => {
   const [loading, setLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
 
-  const onFinish = async (values: { email: string }) => {
+  const onFinish = async (_values: { email: string }) => {
     setLoading(true)
     try {
       // TODO: Implement password recovery API call

@@ -15,7 +15,7 @@ import type { ColumnType } from 'antd/es/table'
 
 const UsersPage: React.FC = () => {
   const dispatch = useAppDispatch()
-  const { items, isLoading, error, total, page, limit } = useAppSelector((state) => state.users)
+  const { items, loading, error, pagination } = useAppSelector((state) => state.users)
   
   const [modalVisible, setModalVisible] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
@@ -200,11 +200,11 @@ const UsersPage: React.FC = () => {
       <DataTable
         columns={columns}
         data={items}
-        loading={isLoading}
+        loading={loading}
         pagination={{
-          current: page,
-          pageSize: limit,
-          total,
+          current: pagination?.current_page || 1,
+          pageSize: pagination?.per_page || 10,
+          total: pagination?.total || 0,
           onChange: (newPage, newPageSize) =>
             setFilters({ ...filters, page: newPage, limit: newPageSize }),
         }}
