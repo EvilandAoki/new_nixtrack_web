@@ -31,10 +31,7 @@ export const fileService = {
 
     const response = await axiosInstance.post<ApiResponse<VehicleFile>>(
       `/vehicles/${vehicleId}/files`,
-      formData,
-      {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      }
+      formData
     )
     return response.data.data
   },
@@ -79,10 +76,7 @@ export const fileService = {
 
     const response = await axiosInstance.post<ApiResponse<OrderFile>>(
       `/orders/${orderId}/files`,
-      formData,
-      {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      }
+      formData
     )
     return response.data.data
   },
@@ -117,10 +111,7 @@ export const fileService = {
 
     const response = await axiosInstance.post<ApiResponse<OrderDetailFile>>(
       `/orders/${orderId}/details/${detailId}/files`,
-      formData,
-      {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      }
+      formData
     )
     return response.data.data
   },

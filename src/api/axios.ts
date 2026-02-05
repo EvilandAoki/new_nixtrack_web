@@ -8,9 +8,7 @@ const baseURL = env.apiBaseUrl
 export const axiosInstance = axios.create({
   baseURL,
   timeout: 30000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  // Let axios handle Content-Type automatically based on the data sent
 })
 
 // Request interceptor - Add token to requests

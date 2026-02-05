@@ -16,8 +16,10 @@ import { fileService } from '@/api/services/file.service'
 import { vehicleService } from '@/api/services/vehicle.service'
 import PageHeader from '@/components/common/PageHeader'
 import dayjs from 'dayjs'
+import ImageUploadModal from '@/components/vehicles/ImageUploadModal'
+import { getFileUrl } from '@/utils/url'
 
-const { TabPane } = Tabs
+// Remove deprecated TabPane import
 
 const VehicleDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -28,6 +30,8 @@ const VehicleDetailPage: React.FC = () => {
   const [history, setHistory] = useState<any[]>([])
   const [loadingHistory, setLoadingHistory] = useState(false)
   const [uploadingFile, setUploadingFile] = useState(false)
+  const [isPhotoModalVisible, setIsPhotoModalVisible] = useState(false)
+  const [messageApi, contextHolder] = message.useMessage()
 
   useEffect(() => {
     if (id) {
@@ -55,18 +59,17 @@ const VehicleDetailPage: React.FC = () => {
     }
   }
 
-  const handleUpload = async (file: File) => {
-    if (!id) return false
+  const handleUpload = async (file: File, description: string = '', isMainPhoto: boolean = false) => {
+    if (!id) return
 
     try {
       setUploadingFile(true)
-      await fileService.uploadVehicleFile(Number(id), file, '', false)
-      message.success('Archivo subido exitosamente')
+      await fileService.uploadVehicleFile(Number(id), file, description, isMainPhoto)
+      messageApi.success('Archivo subido exitosamente')
+      setIsPhotoModalVisible(false)
       refreshData()
-      return false
     } catch (error: any) {
-      message.error(error.response?.data?.message || 'Error al subir archivo')
-      return false
+      messageApi.error(error.response?.data?.message || 'Error al subir archivo')
     } finally {
       setUploadingFile(false)
     }
@@ -95,10 +98,10 @@ const VehicleDetailPage: React.FC = () => {
     if (!id) return
     try {
       await fileService.setMainVehiclePhoto(Number(id), fileId)
-      message.success('Foto principal actualizada')
+      messageApi.success('Foto principal actualizada')
       refreshData()
     } catch (error: any) {
-      message.error(error.response?.data?.message || 'Error al actualizar foto principal')
+      messageApi.error(error.response?.data?.message || 'Error al actualizar foto principal')
     }
   }
 
@@ -168,6 +171,7 @@ const VehicleDetailPage: React.FC = () => {
 
   return (
     <div>
+      {contextHolder}
       <PageHeader
         title={`Vehículo: ${vehicle.license_plate}`}
         extra={
@@ -183,196 +187,211 @@ const VehicleDetailPage: React.FC = () => {
       />
 
       <Card>
-        <Tabs defaultActiveKey="1">
-          <TabPane tab="Información General" key="1">
-            <Descriptions bordered column={2}>
-              <Descriptions.Item label="ID">{vehicle.id}</Descriptions.Item>
-              <Descriptions.Item label="Placa">{vehicle.license_plate}</Descriptions.Item>
-              <Descriptions.Item label="Marca">{vehicle.brand}</Descriptions.Item>
-              <Descriptions.Item label="Tipo">{vehicle.vehicle_type}</Descriptions.Item>
-              <Descriptions.Item label="Año">{vehicle.model_year}</Descriptions.Item>
-              <Descriptions.Item label="Color">{vehicle.color}</Descriptions.Item>
-              <Descriptions.Item label="Capacidad">{vehicle.capacity || '-'}</Descriptions.Item>
-              <Descriptions.Item label="Contenedor">{vehicle.container || '-'}</Descriptions.Item>
-              <Descriptions.Item label="Cliente" span={2}>
-                {vehicle.client?.company_name || '-'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Números de Serie" span={2}>
-                {vehicle.serial_numbers || '-'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Tipo de Vehículo">
-                <Tag color={vehicle.is_escort_vehicle ? 'blue' : 'default'}>
-                  {vehicle.is_escort_vehicle ? 'Escolta' : 'Normal'}
-                </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="Estado">
-                <Tag color={vehicle.is_active ? 'green' : 'red'}>
-                  {vehicle.is_active ? 'Activo' : 'Inactivo'}
-                </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="Fecha de Creación">
-                {dayjs(vehicle.created_at).format('DD/MM/YYYY HH:mm')}
-              </Descriptions.Item>
-              <Descriptions.Item label="Última Actualización">
-                {vehicle.updated_at ? dayjs(vehicle.updated_at).format('DD/MM/YYYY HH:mm') : '-'}
-              </Descriptions.Item>
-            </Descriptions>
+        <Tabs
+          defaultActiveKey="1"
+          items={[
+            {
+              key: '1',
+              label: 'Información General',
+              children: (
+                <>
+                  <Descriptions bordered column={2}>
+                    <Descriptions.Item label="ID">{vehicle.id}</Descriptions.Item>
+                    <Descriptions.Item label="Placa">{vehicle.license_plate}</Descriptions.Item>
+                    <Descriptions.Item label="Marca">{vehicle.brand}</Descriptions.Item>
+                    <Descriptions.Item label="Tipo">{vehicle.vehicle_type}</Descriptions.Item>
+                    <Descriptions.Item label="Año">{vehicle.model_year}</Descriptions.Item>
+                    <Descriptions.Item label="Color">{vehicle.color}</Descriptions.Item>
+                    <Descriptions.Item label="Capacidad">{vehicle.capacity || '-'}</Descriptions.Item>
+                    <Descriptions.Item label="Contenedor">{vehicle.container || '-'}</Descriptions.Item>
+                    <Descriptions.Item label="Cliente" span={2}>
+                      {vehicle.client?.company_name || '-'}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Números de Serie" span={2}>
+                      {vehicle.serial_numbers || '-'}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Tipo de Vehículo">
+                      <Tag color={vehicle.is_escort_vehicle ? 'blue' : 'default'}>
+                        {vehicle.is_escort_vehicle ? 'Escolta' : 'Normal'}
+                      </Tag>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Estado">
+                      <Tag color={vehicle.is_active ? 'green' : 'red'}>
+                        {vehicle.is_active ? 'Activo' : 'Inactivo'}
+                      </Tag>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Fecha de Creación">
+                      {dayjs(vehicle.created_at).format('DD/MM/YYYY HH:mm')}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Última Actualización">
+                      {vehicle.updated_at ? dayjs(vehicle.updated_at).format('DD/MM/YYYY HH:mm') : '-'}
+                    </Descriptions.Item>
+                  </Descriptions>
 
-            <div style={{ marginTop: 24 }}>
-              <h3>Galería de Fotos</h3>
-              {mainPhoto && (
-                <div style={{ marginBottom: 16 }}>
-                  <p>
-                    <strong>Foto Principal:</strong>
-                  </p>
-                  <div style={{ position: 'relative', display: 'inline-block' }}>
-                    <Image
-                      width={300}
-                      src={mainPhoto.file_url}
-                      alt={mainPhoto.description}
-                      style={{ objectFit: 'cover' }}
-                    />
-                    <StarFilled
-                      style={{
-                        position: 'absolute',
-                        top: 8,
-                        right: 8,
-                        color: '#ffd700',
-                        fontSize: 24,
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {otherPhotos.length > 0 && (
-                <div>
-                  <p>
-                    <strong>Otras Fotos:</strong>
-                  </p>
-                  <Image.PreviewGroup>
-                    <Space wrap>
-                      {otherPhotos.map((file) => (
-                        <div key={file.id} style={{ position: 'relative' }}>
+                  <div style={{ marginTop: 24 }}>
+                    <h3>Galería de Fotos</h3>
+                    {mainPhoto && (
+                      <div style={{ marginBottom: 16 }}>
+                        <p>
+                          <strong>Foto Principal:</strong>
+                        </p>
+                        <div style={{ position: 'relative', display: 'inline-block' }}>
                           <Image
-                            width={150}
-                            height={150}
-                            src={file.file_url}
-                            alt={file.description}
+                            width={300}
+                            src={getFileUrl(mainPhoto.file_url)}
+                            alt={mainPhoto.description}
                             style={{ objectFit: 'cover' }}
                           />
-                          <div
+                          <StarFilled
                             style={{
                               position: 'absolute',
-                              top: 4,
-                              right: 4,
-                              display: 'flex',
-                              gap: 4,
+                              top: 8,
+                              right: 8,
+                              color: '#ffd700',
+                              fontSize: 24,
                             }}
-                          >
-                            <Button
-                              type="primary"
-                              size="small"
-                              icon={<StarOutlined />}
-                              onClick={() => handleSetMainPhoto(file.id)}
-                            />
-                            <Button
-                              danger
-                              size="small"
-                              icon={<DeleteOutlined />}
-                              onClick={() => handleDeleteFile(file.id)}
-                            />
-                          </div>
+                          />
                         </div>
-                      ))}
-                    </Space>
-                  </Image.PreviewGroup>
-                </div>
-              )}
+                      </div>
+                    )}
 
-              <Upload
-                beforeUpload={handleUpload}
-                showUploadList={false}
-                accept="image/*"
-                disabled={uploadingFile}
-              >
-                <Button
-                  icon={<UploadOutlined />}
-                  loading={uploadingFile}
-                  style={{ marginTop: 16 }}
-                >
-                  Subir Foto
-                </Button>
-              </Upload>
-            </div>
-          </TabPane>
+                    {otherPhotos.length > 0 && (
+                      <div>
+                        <p>
+                          <strong>Otras Fotos:</strong>
+                        </p>
+                        <Image.PreviewGroup>
+                          <Space wrap>
+                            {otherPhotos.map((file) => (
+                              <div key={file.id} style={{ position: 'relative' }}>
+                                <Image
+                                  width={150}
+                                  height={150}
+                                  src={getFileUrl(file.file_url)}
+                                  alt={file.description}
+                                  style={{ objectFit: 'cover' }}
+                                />
+                                <div
+                                  style={{
+                                    position: 'absolute',
+                                    top: 4,
+                                    right: 4,
+                                    display: 'flex',
+                                    gap: 4,
+                                  }}
+                                >
+                                  <Button
+                                    type="primary"
+                                    size="small"
+                                    icon={<StarOutlined />}
+                                    onClick={() => handleSetMainPhoto(file.id)}
+                                  />
+                                  <Button
+                                    danger
+                                    size="small"
+                                    icon={<DeleteOutlined />}
+                                    onClick={() => handleDeleteFile(file.id)}
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                          </Space>
+                        </Image.PreviewGroup>
+                      </div>
+                    )}
 
-          <TabPane tab="Historial de Servicios" key="2">
-            <Table
-              columns={historyColumns}
-              dataSource={history}
-              rowKey="id"
-              loading={loadingHistory}
-              pagination={{ pageSize: 10 }}
-            />
-          </TabPane>
+                    <Button
+                      icon={<UploadOutlined />}
+                      onClick={() => setIsPhotoModalVisible(true)}
+                      style={{ marginTop: 16 }}
+                    >
+                      Subir Foto
+                    </Button>
 
-          <TabPane tab="Archivos y Documentos" key="3">
-            <Space direction="vertical" style={{ width: '100%' }}>
-              <Upload
-                beforeUpload={handleUpload}
-                showUploadList={false}
-                disabled={uploadingFile}
-              >
-                <Button icon={<UploadOutlined />} loading={uploadingFile}>
-                  Subir Documento
-                </Button>
-              </Upload>
+                    <ImageUploadModal
+                      visible={isPhotoModalVisible}
+                      onCancel={() => setIsPhotoModalVisible(false)}
+                      onUpload={handleUpload}
+                      loading={uploadingFile}
+                    />
+                  </div>
+                </>
+              ),
+            },
+            {
+              key: '2',
+              label: 'Historial de Servicios',
+              children: (
+                <Table
+                  columns={historyColumns}
+                  dataSource={history}
+                  rowKey="id"
+                  loading={loadingHistory}
+                  pagination={{ pageSize: 10 }}
+                />
+              ),
+            },
+            {
+              key: '3',
+              label: 'Archivos y Documentos',
+              children: (
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Upload
+                    beforeUpload={handleUpload as any}
+                    showUploadList={false}
+                    disabled={uploadingFile}
+                  >
+                    <Button icon={<UploadOutlined />} loading={uploadingFile}>
+                      Subir Documento
+                    </Button>
+                  </Upload>
 
-              {loading ? (
-                <Spin />
-              ) : (
-                <div>
-                  {files.length === 0 ? (
-                    <p>No hay archivos disponibles</p>
+                  {loading ? (
+                    <Spin />
                   ) : (
-                    <Space direction="vertical" style={{ width: '100%' }}>
-                      {files.map((file) => (
-                        <Card
-                          key={file.id}
-                          size="small"
-                          extra={
-                            <Button
-                              danger
+                    <div>
+                      {files.length === 0 ? (
+                        <p>No hay archivos disponibles</p>
+                      ) : (
+                        <Space direction="vertical" style={{ width: '100%' }}>
+                          {files.map((file) => (
+                            <Card
+                              key={file.id}
                               size="small"
-                              icon={<DeleteOutlined />}
-                              onClick={() => handleDeleteFile(file.id)}
+                              extra={
+                                <Button
+                                  danger
+                                  size="small"
+                                  icon={<DeleteOutlined />}
+                                  onClick={() => handleDeleteFile(file.id)}
+                                >
+                                  Eliminar
+                                </Button>
+                              }
                             >
-                              Eliminar
-                            </Button>
-                          }
-                        >
-                          <p>
-                            <strong>{file.file_name}</strong>
-                          </p>
-                          {file.description && <p>{file.description}</p>}
-                          <p>
-                            <small>
-                              {dayjs(file.created_at).format('DD/MM/YYYY HH:mm')}
-                            </small>
-                          </p>
-                          <a href={file.file_url} target="_blank" rel="noopener noreferrer">
-                            Ver archivo
-                          </a>
-                        </Card>
-                      ))}
-                    </Space>
+                              <p>
+                                <strong>{file.file_name}</strong>
+                              </p>
+                              {file.description && <p>{file.description}</p>}
+                              <p>
+                                <small>
+                                  {dayjs(file.created_at).format('DD/MM/YYYY HH:mm')}
+                                </small>
+                              </p>
+                              <a href={getFileUrl(file.file_url)} target="_blank" rel="noopener noreferrer">
+                                Ver archivo
+                              </a>
+                            </Card>
+                          ))}
+                        </Space>
+                      )}
+                    </div>
                   )}
-                </div>
-              )}
-            </Space>
-          </TabPane>
-        </Tabs>
+                </Space>
+              ),
+            },
+          ]}
+        />
       </Card>
     </div>
   )

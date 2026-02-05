@@ -6,6 +6,7 @@
 export const env = {
   // API Configuration
   apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
+  baseUrl: (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api').replace(/\/api$/, ''),
 
   // Application Configuration
   appName: import.meta.env.VITE_APP_NAME || 'NixTrack',
