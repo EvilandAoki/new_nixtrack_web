@@ -10,9 +10,10 @@ import {
 import type { ColumnsType } from 'antd/es/table'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { fetchClients, deleteClient } from '@/features/clients/clientsSlice'
-import type { Client } from '@/types'
+import type { Client, City } from '@/types'
 import ClientFormModal from './ClientFormModal'
 import PageHeader from '@/components/common/PageHeader'
+import { catalogService } from '@/api/services/catalog.service'
 
 const { Search } = Input
 const { Option } = Select
@@ -25,10 +26,28 @@ const ClientsPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<0 | 1 | undefined>(undefined)
   const [modalVisible, setModalVisible] = useState(false)
   const [editingClient, setEditingClient] = useState<Client | null>(null)
+  const [cities, setCities] = useState<City[]>([])
+  const [citiesMap, setCitiesMap] = useState<Record<number, string>>({})
 
   useEffect(() => {
     loadClients()
+    loadCities()
   }, [])
+
+  const loadCities = async () => {
+    try {
+      const citiesList = await catalogService.getCities()
+      setCities(citiesList || [])
+      // Crear mapa de city_id -> name
+      const map: Record<number, string> = {}
+      citiesList?.forEach((city) => {
+        map[city.city_id] = city.name
+      })
+      setCitiesMap(map)
+    } catch (error) {
+      console.error('Error cargando ciudades:', error)
+    }
+  }
 
   const loadClients = (params = {}) => {
     dispatch(
@@ -121,7 +140,7 @@ const ClientsPage: React.FC = () => {
       title: 'Ciudad',
       dataIndex: 'city_id',
       key: 'city_id',
-      render: (cityId) => cityId || '-',
+      render: (cityId) => citiesMap[cityId] || '-',
     },
     {
       title: 'Estado',

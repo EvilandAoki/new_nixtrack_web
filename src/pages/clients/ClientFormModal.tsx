@@ -38,9 +38,11 @@ const ClientFormModal: React.FC<ClientFormModalProps> = ({ visible, client, onCl
           city_id: client.city_id,
           is_active: client.is_active === 1,
         })
+        console.log('Cliente a editar:', client)
         setSelectedCountry(client.country_id)
         loadDepartments(client.country_id)
-        // TODO: Cargar departamento del cliente para luego cargar ciudades
+        // Cargar información de la ciudad para obtener el departamento
+        loadClientCityInfo(client.city_id)
       } else {
         // Modo creación
         form.resetFields()
@@ -68,13 +70,27 @@ const ClientFormModal: React.FC<ClientFormModalProps> = ({ visible, client, onCl
   const loadCities = async (departmentCode: string) => {
     try {
       console.log('Cargando ciudades para departamento:', departmentCode)
-      const citiesList = await catalogService.getCities({ departmentCode })
+      const citiesList = await catalogService.getCities({ department_code: departmentCode })
       console.log('Ciudades cargadas:', citiesList)
       setCities(citiesList || [])
     } catch (error: any) {
       console.error('Error cargando ciudades:', error)
       setCities([])
       message.error(error.response?.data?.message || 'Error al cargar ciudades')
+    }
+  }
+
+  const loadClientCityInfo = async (cityId: number) => {
+    try {
+      const city = await catalogService.getCityById(cityId)
+      if (city && city.department_code) {
+        setSelectedDepartment(city.department_code)
+        form.setFieldsValue({ department_code: city.department_code })
+        loadCities(city.department_code)
+      }
+    } catch (error: any) {
+      console.error('Error cargando información de la ciudad:', error)
+      message.error(error.response?.data?.message || 'Error al cargar información de la ciudad')
     }
   }
 

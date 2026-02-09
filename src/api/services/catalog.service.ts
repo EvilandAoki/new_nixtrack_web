@@ -16,8 +16,16 @@ export const catalogService = {
   /**
    * Obtener lista de ciudades
    */
-  getCities: async (params: { departmentCode?: string; search?: string } = {}) => {
+  getCities: async (params: { department_code?: string; search?: string } = {}) => {
     const response = await axiosInstance.get<ApiResponse<City[]>>('/catalog/cities', { params })
+    return response.data.data
+  },
+
+  /**
+   * Obtener una ciudad por ID
+   */
+  getCityById: async (cityId: number) => {
+    const response = await axiosInstance.get<ApiResponse<City>>(`/catalog/cities/${cityId}`)
     return response.data.data
   },
 
