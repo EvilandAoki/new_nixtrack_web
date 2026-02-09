@@ -1,12 +1,20 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { userService } from '@/api/services/user.service'
 import { getErrorMessage } from '@/api/axios'
-import type { EntityState, User, UserFormData, UserQueryParams } from '@/types'
+import { roleService } from '@/api/services/role.service'
+import type { EntityState, User, UserFormData, UserQueryParams, Role } from '@/types'
 import { createInitialEntityState } from '@/types'
 
-type UsersState = EntityState<User>
+interface UsersState extends EntityState<User> {
+  roles: Role[]
+  rolesLoading: boolean
+}
 
-const initialState: UsersState = createInitialEntityState<User>()
+const initialState: UsersState = {
+  ...createInitialEntityState<User>(),
+  roles: [],
+  rolesLoading: false,
+}
 
 // Async thunks
 export const fetchUsers = createAsyncThunk(
@@ -66,6 +74,18 @@ export const deleteUser = createAsyncThunk(
     try {
       await userService.deleteUser(id)
       return id
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error))
+    }
+  }
+)
+
+export const fetchRoles = createAsyncThunk(
+  'users/fetchRoles',
+  async (_, { rejectWithValue }) => {
+    try {
+      const data = await roleService.getRoles()
+      return Array.isArray(data) ? data : []
     } catch (error) {
       return rejectWithValue(getErrorMessage(error))
     }
@@ -176,6 +196,18 @@ const usersSlice = createSlice({
     builder.addCase(deleteUser.rejected, (state, action) => {
       state.loading = false
       state.error = action.payload as string
+    })
+
+    // Fetch roles
+    builder.addCase(fetchRoles.pending, (state) => {
+      state.rolesLoading = true
+    })
+    builder.addCase(fetchRoles.fulfilled, (state, action) => {
+      state.rolesLoading = false
+      state.roles = action.payload
+    })
+    builder.addCase(fetchRoles.rejected, (state) => {
+      state.rolesLoading = false
     })
   },
 })

@@ -4,9 +4,14 @@ import type { EntityState, Vehicle } from '@/types'
 import { createInitialEntityState } from '@/types'
 import { message } from 'antd'
 
-type VehiclesState = EntityState<Vehicle>
+interface VehiclesState extends EntityState<Vehicle> {
+  escortVehicles: Vehicle[]
+}
 
-const initialState: VehiclesState = createInitialEntityState<Vehicle>()
+const initialState: VehiclesState = {
+  ...createInitialEntityState<Vehicle>(),
+  escortVehicles: [],
+}
 
 // ============= Async Thunks =============
 
@@ -213,9 +218,9 @@ const vehiclesSlice = createSlice({
       .addCase(fetchEscortVehicles.pending, (state) => {
         state.loading = true
       })
-      .addCase(fetchEscortVehicles.fulfilled, (state) => {
+      .addCase(fetchEscortVehicles.fulfilled, (state, action) => {
         state.loading = false
-        // Podríamos guardar en un array separado si es necesario
+        state.escortVehicles = action.payload
       })
       .addCase(fetchEscortVehicles.rejected, (state, action) => {
         state.loading = false

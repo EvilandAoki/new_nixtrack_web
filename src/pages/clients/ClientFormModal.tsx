@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { Modal, Form, Input, Select, Switch, Row, Col, message } from 'antd'
-import { useAppDispatch } from '@/store/hooks'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { createClient, updateClient } from '@/features/clients/clientsSlice'
-import { catalogService } from '@/api/services/catalog.service'
-import type { Client, ClientFormData, Department, City } from '@/types'
+import { fetchDepartments, fetchCities } from '@/features/catalog/catalogSlice'
+import type { Client, ClientFormData } from '@/types'
 
 const { Option } = Select
 
@@ -16,11 +16,10 @@ interface ClientFormModalProps {
 const ClientFormModal: React.FC<ClientFormModalProps> = ({ visible, client, onClose }) => {
   const [form] = Form.useForm()
   const dispatch = useAppDispatch()
-  const [loading, setLoading] = useState(false)
+  const { loading: loadingClients } = useAppSelector((state) => state.clients)
+  const { departments, cities, loading: loadingCatalog } = useAppSelector((state) => state.catalog)
 
   const [countries] = useState([{ code: 'CO', name: 'Colombia' }])
-  const [departments, setDepartments] = useState<Department[]>([])
-  const [cities, setCities] = useState<City[]>([])
   const [selectedCountry, setSelectedCountry] = useState<string>('CO')
   const [selectedDepartment, setSelectedDepartment] = useState<string | undefined>()
 
@@ -36,11 +35,19 @@ const ClientFormModal: React.FC<ClientFormModalProps> = ({ visible, client, onCl
           email: client.email,
           country_id: client.country_id,
           city_id: client.city_id,
+          department_code: client.department_code,
           is_active: client.is_active === 1,
         })
         setSelectedCountry(client.country_id)
-        loadDepartments(client.country_id)
-        // TODO: Cargar departamento del cliente para luego cargar ciudades
+
+        // Cargar departamentos del país
+        dispatch(fetchDepartments(client.country_id))
+
+        // Si tenemos el código del departamento, lo seteamos y cargamos las ciudades
+        if (client.department_code) {
+          setSelectedDepartment(client.department_code)
+          dispatch(fetchCities({ departmentCode: client.department_code }))
+        }
       } else {
         // Modo creación
         form.resetFields()
@@ -49,47 +56,22 @@ const ClientFormModal: React.FC<ClientFormModalProps> = ({ visible, client, onCl
           is_active: true,
         })
         setSelectedCountry('CO')
-        loadDepartments('CO')
+        dispatch(fetchDepartments('CO'))
       }
     }
-  }, [visible, client, form])
-
-  const loadDepartments = async (countryCode: string) => {
-    try {
-      const deps = await catalogService.getDepartments(countryCode)
-      setDepartments(deps || [])
-    } catch (error: any) {
-      console.error('Error cargando departamentos:', error)
-      setDepartments([])
-      message.error(error.response?.data?.message || 'Error al cargar departamentos')
-    }
-  }
-
-  const loadCities = async (departmentCode: string) => {
-    try {
-      console.log('Cargando ciudades para departamento:', departmentCode)
-      const citiesList = await catalogService.getCities({ departmentCode })
-      console.log('Ciudades cargadas:', citiesList)
-      setCities(citiesList || [])
-    } catch (error: any) {
-      console.error('Error cargando ciudades:', error)
-      setCities([])
-      message.error(error.response?.data?.message || 'Error al cargar ciudades')
-    }
-  }
+  }, [visible, client, form, dispatch])
 
   const handleCountryChange = (countryCode: string) => {
     setSelectedCountry(countryCode)
     setSelectedDepartment(undefined)
-    setCities([])
     form.setFieldsValue({ department_code: undefined, city_id: undefined })
-    loadDepartments(countryCode)
+    dispatch(fetchDepartments(countryCode))
   }
 
   const handleDepartmentChange = (departmentCode: string) => {
     setSelectedDepartment(departmentCode)
     form.setFieldsValue({ city_id: undefined })
-    loadCities(departmentCode)
+    dispatch(fetchCities({ departmentCode }))
   }
 
   const handleSubmit = async () => {
@@ -107,8 +89,6 @@ const ClientFormModal: React.FC<ClientFormModalProps> = ({ visible, client, onCl
         is_active: values.is_active ? 1 : 0,
       }
 
-      setLoading(true)
-
       if (client) {
         // Actualizar
         await dispatch(updateClient({ id: client.id_client, data: formData })).unwrap()
@@ -122,8 +102,6 @@ const ClientFormModal: React.FC<ClientFormModalProps> = ({ visible, client, onCl
       if (error.errorFields) {
         message.error('Por favor complete todos los campos requeridos')
       }
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -133,7 +111,7 @@ const ClientFormModal: React.FC<ClientFormModalProps> = ({ visible, client, onCl
       open={visible}
       onOk={handleSubmit}
       onCancel={() => onClose()}
-      confirmLoading={loading}
+      confirmLoading={loadingClients}
       width={700}
       okText={client ? 'Actualizar' : 'Crear'}
       cancelText="Cancelar"
@@ -229,6 +207,7 @@ const ClientFormModal: React.FC<ClientFormModalProps> = ({ visible, client, onCl
               <Select
                 placeholder="Seleccione departamento"
                 allowClear
+                loading={loadingCatalog}
                 onChange={handleDepartmentChange}
                 disabled={!selectedCountry}
               >
@@ -250,6 +229,7 @@ const ClientFormModal: React.FC<ClientFormModalProps> = ({ visible, client, onCl
               <Select
                 placeholder="Seleccione ciudad"
                 showSearch
+                loading={loadingCatalog}
                 optionFilterProp="children"
                 disabled={!selectedDepartment}
               >

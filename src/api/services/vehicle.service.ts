@@ -65,10 +65,10 @@ export const vehicleService = {
    * Obtener vehículos de escolta (para selector de escoltas/acompañantes)
    */
   getEscortVehicles: async () => {
-    const response = await axiosInstance.get<ApiResponse<Vehicle[]>>('/vehicles', {
-      params: { is_escort_vehicle: 1, is_active: 1 },
+    const response = await axiosInstance.get<ApiResponse<PaginatedResponse<Vehicle>>>('/vehicles', {
+      params: { is_escort_vehicle: 1, is_active: 1, limit: 1000 },
     })
-    return response.data.data
+    return response.data.data.items
   },
 
   /**

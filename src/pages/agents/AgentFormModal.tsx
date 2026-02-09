@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { Modal, Form, Input, Select, Switch, Row, Col, message } from 'antd'
-import { useAppDispatch } from '@/store/hooks'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { createAgent, updateAgent } from '@/features/agents/agentsSlice'
-import { vehicleService } from '@/api/services/vehicle.service'
-import type { Agent, AgentFormData, Vehicle } from '@/types'
+import { fetchEscortVehicles } from '@/features/vehicles/vehiclesSlice'
+import type { Agent, AgentFormData } from '@/types'
 
 const { Option } = Select
 
@@ -16,14 +16,13 @@ interface AgentFormModalProps {
 const AgentFormModal: React.FC<AgentFormModalProps> = ({ visible, agent, onClose }) => {
   const [form] = Form.useForm()
   const dispatch = useAppDispatch()
-  const [loading, setLoading] = useState(false)
-  const [escortVehicles, setEscortVehicles] = useState<Vehicle[]>([])
-  const [loadingVehicles, setLoadingVehicles] = useState(false)
+  const { loading: loadingAgents } = useAppSelector((state) => state.agents)
+  const { escortVehicles, loading: loadingVehicles } = useAppSelector((state) => state.vehicles)
 
   useEffect(() => {
     if (visible) {
       loadEscortVehicles()
-      
+
       if (agent) {
         // Modo edición
         form.setFieldsValue({
@@ -43,22 +42,8 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({ visible, agent, onClose
     }
   }, [visible, agent, form])
 
-  const loadEscortVehicles = async () => {
-    try {
-      setLoadingVehicles(true)
-      // Obtener solo vehículos de escolta activos
-      const vehicles = await vehicleService.getVehicles({
-        is_escort_vehicle: 1,
-        is_active: 1,
-        limit: 1000,
-      })
-      setEscortVehicles(vehicles.items || [])
-    } catch (error) {
-      console.error('Error cargando vehículos de escolta:', error)
-      message.error('Error al cargar vehículos de escolta')
-    } finally {
-      setLoadingVehicles(false)
-    }
+  const loadEscortVehicles = () => {
+    dispatch(fetchEscortVehicles())
   }
 
   const handleSubmit = async () => {
@@ -73,7 +58,7 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({ visible, agent, onClose
         is_active: values.is_active ? 1 : 0,
       }
 
-      setLoading(true)
+
 
       if (agent) {
         // Actualizar
@@ -88,8 +73,6 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({ visible, agent, onClose
       if (error.errorFields) {
         message.error('Por favor complete todos los campos requeridos')
       }
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -99,7 +82,7 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({ visible, agent, onClose
       open={visible}
       onOk={handleSubmit}
       onCancel={() => onClose()}
-      confirmLoading={loading}
+      confirmLoading={loadingAgents}
       width={700}
       okText={agent ? 'Actualizar' : 'Crear'}
       cancelText="Cancelar"
@@ -179,7 +162,7 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({ visible, agent, onClose
         {escortVehicles.length === 0 && !loadingVehicles && (
           <div style={{ marginBottom: 16, padding: 10, background: '#fff7e6', border: '1px solid #ffd591', borderRadius: 4 }}>
             <p style={{ margin: 0, color: '#d46b08' }}>
-              <strong>Nota:</strong> No hay vehículos de escolta disponibles. 
+              <strong>Nota:</strong> No hay vehículos de escolta disponibles.
               Debe crear primero un vehículo y marcarlo como "Vehículo de Escolta".
             </p>
           </div>

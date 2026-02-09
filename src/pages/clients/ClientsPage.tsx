@@ -119,9 +119,9 @@ const ClientsPage: React.FC = () => {
     },
     {
       title: 'Ciudad',
-      dataIndex: 'city_id',
-      key: 'city_id',
-      render: (cityId) => cityId || '-',
+      dataIndex: 'city_name',
+      key: 'city_name',
+      render: (city_name, record) => city_name || record.city_id || '-',
     },
     {
       title: 'Estado',

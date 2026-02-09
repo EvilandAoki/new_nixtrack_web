@@ -7,6 +7,7 @@ import vehiclesReducer from '@/features/vehicles/vehiclesSlice'
 import agentsReducer from '@/features/agents/agentsSlice'
 import ordersReducer from '@/features/orders/ordersSlice'
 import orderDetailsReducer from '@/features/orders/orderDetailsSlice'
+import catalogReducer from '@/features/catalog/catalogSlice'
 
 export const store = configureStore({
   reducer: {
@@ -18,6 +19,7 @@ export const store = configureStore({
     agents: agentsReducer,
     orders: ordersReducer,
     orderDetails: orderDetailsReducer,
+    catalog: catalogReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

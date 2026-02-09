@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react'
 import { Modal, Form, Input, Select, Switch, message } from 'antd'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { createUser, updateUser } from '@/features/users/usersSlice'
+import { createUser, updateUser, fetchRoles } from '@/features/users/usersSlice'
+import { fetchClients } from '@/features/clients/clientsSlice'
+import { fetchCities } from '@/features/catalog/catalogSlice'
 import type { User } from '@/types'
 
 interface UserFormModalProps {
@@ -13,7 +15,17 @@ interface UserFormModalProps {
 const UserFormModal: React.FC<UserFormModalProps> = ({ visible, user, onClose }) => {
   const [form] = Form.useForm()
   const dispatch = useAppDispatch()
-  const { loading } = useAppSelector((state) => state.users)
+  const { loading, roles, rolesLoading } = useAppSelector((state) => state.users)
+  const { items: clients, loading: clientsLoading } = useAppSelector((state) => state.clients)
+  const { cities, loading: citiesLoading } = useAppSelector((state) => state.catalog)
+
+  useEffect(() => {
+    if (visible) {
+      dispatch(fetchClients({ limit: 1000, is_active: 1 }))
+      dispatch(fetchRoles())
+      dispatch(fetchCities())
+    }
+  }, [dispatch, visible])
 
   useEffect(() => {
     if (visible && user) {
@@ -36,7 +48,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ visible, user, onClose })
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields()
-      
+
       if (user) {
         // Update
         await dispatch(updateUser({ id: user.id, userData: values })).unwrap()
@@ -50,7 +62,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ visible, user, onClose })
         await dispatch(createUser(values)).unwrap()
         message.success('Usuario creado exitosamente')
       }
-      
+
       onClose(true)
     } catch (error: any) {
       if (error.message) {
@@ -127,9 +139,20 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ visible, user, onClose })
           label="Cliente"
           rules={[{ required: true, message: 'El cliente es requerido' }]}
         >
-          <Select placeholder="Seleccione un cliente">
-            {/* TODO: Load clients from API */}
-            <Select.Option value={1}>Cliente Demo</Select.Option>
+          <Select
+            placeholder="Seleccione un cliente"
+            loading={clientsLoading}
+            showSearch
+            optionFilterProp="children"
+            filterOption={(input, option) =>
+              (option?.children as unknown as string).toLowerCase().includes(input.toLowerCase())
+            }
+          >
+            {clients.map((client) => (
+              <Select.Option key={client.id_client} value={client.id_client}>
+                {client.company_name}
+              </Select.Option>
+            ))}
           </Select>
         </Form.Item>
 
@@ -146,7 +169,21 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ visible, user, onClose })
           label="Ciudad"
           rules={[{ required: true, message: 'La ciudad es requerida' }]}
         >
-          <Input placeholder="Código de ciudad" />
+          <Select
+            placeholder="Seleccione una ciudad"
+            loading={citiesLoading}
+            showSearch
+            optionFilterProp="children"
+            filterOption={(input, option) =>
+              (option?.children as unknown as string).toLowerCase().includes(input.toLowerCase())
+            }
+          >
+            {cities.map((city) => (
+              <Select.Option key={city.city_id} value={city.code}>
+                {city.name} ({city.code})
+              </Select.Option>
+            ))}
+          </Select>
         </Form.Item>
 
         <Form.Item
@@ -154,12 +191,12 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ visible, user, onClose })
           label="Rol"
           rules={[{ required: true, message: 'El rol es requerido' }]}
         >
-          <Select placeholder="Seleccione un rol">
-            {/* TODO: Load roles from API */}
-            <Select.Option value={1}>Administrador</Select.Option>
-            <Select.Option value={2}>Supervisor</Select.Option>
-            <Select.Option value={3}>Operador</Select.Option>
-            <Select.Option value={4}>Cliente</Select.Option>
+          <Select placeholder="Seleccione un rol" loading={rolesLoading}>
+            {roles.map((role) => (
+              <Select.Option key={role.id_role} value={role.id_role}>
+                {role.name}
+              </Select.Option>
+            ))}
           </Select>
         </Form.Item>
 

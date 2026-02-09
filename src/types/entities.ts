@@ -32,6 +32,8 @@ export interface Client {
   email: string
   country_id: string
   city_id: number
+  city_name?: string
+  department_code?: string
   is_active: 0 | 1
   created_at: string
   created_by: number

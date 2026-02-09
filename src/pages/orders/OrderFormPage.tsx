@@ -2,14 +2,13 @@ import React, { useEffect, useState } from 'react'
 import { Card, Form, Input, Select, Button, DatePicker, Row, Col, Space, Divider, message, InputNumber } from 'antd'
 import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useAppDispatch } from '@/store/hooks'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { createOrder, updateOrder } from '@/features/orders/ordersSlice'
-import { clientService } from '@/api/services/client.service'
-import { vehicleService } from '@/api/services/vehicle.service'
-import { agentService } from '@/api/services/agent.service'
-import { catalogService } from '@/api/services/catalog.service'
+import { fetchClients } from '@/features/clients/clientsSlice'
+import { fetchVehicles } from '@/features/vehicles/vehiclesSlice'
+import { fetchAgents } from '@/features/agents/agentsSlice'
+import { fetchCities } from '@/features/catalog/catalogSlice'
 import { orderService } from '@/api/services/order.service'
-import type { Client, Vehicle, Agent, City } from '@/types'
 import PageHeader from '@/components/common/PageHeader'
 import dayjs from 'dayjs'
 
@@ -23,39 +22,28 @@ const OrderFormPage: React.FC = () => {
     const [form] = Form.useForm()
 
     const [loading, setLoading] = useState(false)
-    const [clients, setClients] = useState<Client[]>([])
-    const [vehicles, setVehicles] = useState<Vehicle[]>([])
-    const [agents, setAgents] = useState<Agent[]>([])
-    const [cities, setCities] = useState<City[]>([])
     const [isEdit, setIsEdit] = useState(false)
 
+    // Selectors
+    const { items: clients, loading: loadingClients } = useAppSelector((state) => state.clients)
+    const { items: vehicles, loading: loadingVehicles } = useAppSelector((state) => state.vehicles)
+    const { items: agents, loading: loadingAgents } = useAppSelector((state) => state.agents)
+    const { cities, loading: loadingCities } = useAppSelector((state) => state.catalog)
+
     useEffect(() => {
-        loadDependencies()
+        dispatch(fetchClients({ limit: 1000, is_active: 1 }))
+        dispatch(fetchVehicles({ limit: 1000, is_active: 1 }))
+        dispatch(fetchAgents({ limit: 1000, is_active: 1 }))
+        dispatch(fetchCities())
+
         if (id && id !== 'new') {
             setIsEdit(true)
             loadOrder(Number(id))
         }
-    }, [id])
+    }, [id, dispatch])
 
-    const loadDependencies = async () => {
-        try {
-            const [clientsRes, vehiclesRes, agentsRes, citiesRes] = await Promise.all([
-                clientService.getClients({ limit: 100, is_active: 1 }),
-                vehicleService.getVehicles({ limit: 100, is_active: 1 }),
-                agentService.getAgents({ limit: 100, is_active: 1 }),
-                catalogService.getCities()
-            ])
-
-            setClients(clientsRes.items)
-            setVehicles(vehiclesRes.items)
-            setAgents(agentsRes.items)
-            setCities(citiesRes)
-        } catch (error) {
-            console.error('Error loading dependencies:', error)
-            message.error('Error al cargar datos necesarios')
-        }
-    }
-
+    // loadOrder se mantiene igual porque usa orderService localmente para obtener detalles específicos
+    // aunque idealmente también debería ir a redux, pero para no cambiar demasiado, lo dejamos así.
     const loadOrder = async (orderId: number) => {
         setLoading(true)
         try {
@@ -139,7 +127,12 @@ const OrderFormPage: React.FC = () => {
                                 label="Cliente"
                                 rules={[{ required: true, message: 'El cliente es requerido' }]}
                             >
-                                <Select placeholder="Seleccione un cliente" showSearch optionFilterProp="children">
+                                <Select
+                                    placeholder="Seleccione un cliente"
+                                    showSearch
+                                    optionFilterProp="children"
+                                    loading={loadingClients}
+                                >
                                     {clients.map(c => (
                                         <Option key={c.id_client} value={c.id_client}>{c.company_name}</Option>
                                     ))}
@@ -154,7 +147,13 @@ const OrderFormPage: React.FC = () => {
                                 name="vehicle_id"
                                 label="Vehículo"
                             >
-                                <Select placeholder="Seleccione un vehículo" showSearch optionFilterProp="children" allowClear>
+                                <Select
+                                    placeholder="Seleccione un vehículo"
+                                    showSearch
+                                    optionFilterProp="children"
+                                    allowClear
+                                    loading={loadingVehicles}
+                                >
                                     {vehicles.map(v => (
                                         <Option key={v.id} value={v.id}>{v.license_plate} - {v.brand}</Option>
                                     ))}
@@ -186,7 +185,12 @@ const OrderFormPage: React.FC = () => {
                                 name="origin_city_code"
                                 label="Ciudad Origen"
                             >
-                                <Select placeholder="Origen" showSearch optionFilterProp="children">
+                                <Select
+                                    placeholder="Origen"
+                                    showSearch
+                                    optionFilterProp="children"
+                                    loading={loadingCities}
+                                >
                                     {cities.map(c => (
                                         <Option key={c.code} value={c.code}>{c.name}</Option>
                                     ))}
@@ -198,7 +202,12 @@ const OrderFormPage: React.FC = () => {
                                 name="destination_city_code"
                                 label="Ciudad Destino"
                             >
-                                <Select placeholder="Destino" showSearch optionFilterProp="children">
+                                <Select
+                                    placeholder="Destino"
+                                    showSearch
+                                    optionFilterProp="children"
+                                    loading={loadingCities}
+                                >
                                     {cities.map(c => (
                                         <Option key={c.code} value={c.code}>{c.name}</Option>
                                     ))}
@@ -241,7 +250,13 @@ const OrderFormPage: React.FC = () => {
                                 name="escort_id"
                                 label="Acompañante / Escolta"
                             >
-                                <Select placeholder="Seleccione escolta" showSearch optionFilterProp="children" allowClear>
+                                <Select
+                                    placeholder="Seleccione escolta"
+                                    showSearch
+                                    optionFilterProp="children"
+                                    allowClear
+                                    loading={loadingAgents}
+                                >
                                     {agents.map(a => (
                                         <Option key={a.id} value={a.id}>{a.name}</Option>
                                     ))}
@@ -300,7 +315,7 @@ const OrderFormPage: React.FC = () => {
                     </Form.Item>
                 </Form>
             </Card>
-        </div>
+        </div >
     )
 }
 
