@@ -129,6 +129,22 @@ const DashboardPage: React.FC = () => {
       ),
     },
     {
+      title: 'Último Reporte',
+      key: 'last_report',
+      render: (_, record) => (
+        record.last_report ? (
+          <Space direction="vertical" size={0}>
+            <span>{record.last_report.location_name}</span>
+            <span style={{ fontSize: '12px', color: '#888' }}>
+              {formatDateTime(record.last_report.reported_at)}
+            </span>
+          </Space>
+        ) : (
+          <span style={{ color: '#ccc' }}>Sin reportes</span>
+        )
+      ),
+    },
+    {
       title: 'Fecha Salida',
       dataIndex: 'departure_at',
       key: 'departure_at',

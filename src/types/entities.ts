@@ -142,6 +142,13 @@ export interface Order {
   status?: TrackStatus
   origin_city?: City
   destination_city?: City
+  last_report?: {
+    id: number
+    reported_at: string
+    location_name: string
+    latitude: number | null
+    longitude: number | null
+  }
 }
 
 export interface OrderDetail {
