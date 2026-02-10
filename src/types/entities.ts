@@ -104,6 +104,7 @@ export interface Agent {
   updated_by?: number
   // Relations
   vehicle?: Vehicle
+  files?: AgentFile[]
 }
 
 export interface Order {
@@ -195,6 +196,19 @@ export interface OrderDetailFile {
   description: string
   file_url: string
   mime_type: string
+  created_by: number
+  created_at: string
+  is_deleted: 0 | 1
+}
+
+export interface AgentFile {
+  id: number
+  agent_id: number
+  file_name: string
+  description: string
+  file_url: string
+  mime_type: string
+  is_main_photo: 0 | 1
   created_by: number
   created_at: string
   is_deleted: 0 | 1

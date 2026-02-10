@@ -10,6 +10,7 @@ import ClientsPage from '@/pages/clients/ClientsPage'
 import VehiclesPage from '@/pages/vehicles/VehiclesPage'
 import VehicleDetailPage from '@/pages/vehicles/VehicleDetailPage'
 import AgentsPage from '@/pages/agents/AgentsPage'
+import AgentDetailPage from '@/pages/agents/AgentDetailPage'
 import OrdersPage from '@/pages/orders/OrdersPage'
 import OrderDetailPage from '@/pages/orders/OrderDetailPage'
 import OrderFormPage from '@/pages/orders/OrderFormPage'
@@ -92,6 +93,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <AgentsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/agents/:id"
+        element={
+          <ProtectedRoute>
+            <AgentDetailPage />
           </ProtectedRoute>
         }
       />
