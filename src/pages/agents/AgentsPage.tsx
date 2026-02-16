@@ -6,6 +6,7 @@ import {
   DeleteOutlined,
   SearchOutlined,
   ExclamationCircleOutlined,
+  EyeOutlined,
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
@@ -13,12 +14,14 @@ import { fetchAgents, deleteAgent } from '@/features/agents/agentsSlice'
 import type { Agent } from '@/types'
 import AgentFormModal from './AgentFormModal'
 import PageHeader from '@/components/common/PageHeader'
+import { useNavigate } from 'react-router-dom'
 
 const { Search } = Input
 const { Option } = Select
 
 const AgentsPage: React.FC = () => {
   const dispatch = useAppDispatch()
+  const navigate = useNavigate()
   const { items, loading, pagination } = useAppSelector((state) => state.agents)
 
   const [search, setSearch] = useState('')
@@ -64,6 +67,10 @@ const AgentsPage: React.FC = () => {
   const handleEdit = (agent: Agent) => {
     setEditingAgent(agent)
     setModalVisible(true)
+  }
+
+  const handleView = (agent: Agent) => {
+    navigate(`/agents/${agent.id}`)
   }
 
   const handleDelete = (agent: Agent) => {
@@ -138,9 +145,17 @@ const AgentsPage: React.FC = () => {
     {
       title: 'Acciones',
       key: 'actions',
-      width: 150,
+      width: 180,
       render: (_, record) => (
         <Space size="small">
+          <Button
+            type="link"
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => handleView(record)}
+          >
+            Ver
+          </Button>
           <Button
             type="link"
             size="small"
@@ -208,7 +223,7 @@ const AgentsPage: React.FC = () => {
             showTotal: (total) => `Total ${total} escoltas`,
           }}
           onChange={handleTableChange}
-          scroll={{ x: 1000 }}
+          scroll={{ x: 1100 }}
         />
       </Card>
 

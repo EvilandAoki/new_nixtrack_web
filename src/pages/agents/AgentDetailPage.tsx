@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Card, Tabs, Descriptions, Tag, Button, Space, Spin, Image, Upload, message, Modal, Table } from 'antd'
+import { Card, Tabs, Descriptions, Tag, Button, Space, Spin, Image, Upload, message, Modal } from 'antd'
 import {
   ArrowLeftOutlined,
   EditOutlined,
@@ -7,64 +7,47 @@ import {
   DeleteOutlined,
   StarOutlined,
   StarFilled,
-  EyeOutlined,
 } from '@ant-design/icons'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { fetchVehicleById } from '@/features/vehicles/vehiclesSlice'
+import { fetchAgentById } from '@/features/agents/agentsSlice'
 import { fileService } from '@/api/services/file.service'
-import { vehicleService } from '@/api/services/vehicle.service'
 import PageHeader from '@/components/common/PageHeader'
 import dayjs from 'dayjs'
 import ImageUploadModal from '@/components/vehicles/ImageUploadModal'
 import { getFileUrl } from '@/utils/url'
 
-// Remove deprecated TabPane import
-
-const VehicleDetailPage: React.FC = () => {
+const AgentDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
 
-  const { selected: vehicle, loading } = useAppSelector((state) => state.vehicles)
-  const [history, setHistory] = useState<any[]>([])
-  const [loadingHistory, setLoadingHistory] = useState(false)
+  const { selected: agent, loading } = useAppSelector((state) => state.agents)
   const [uploadingFile, setUploadingFile] = useState(false)
   const [isPhotoModalVisible, setIsPhotoModalVisible] = useState(false)
   const [messageApi, contextHolder] = message.useMessage()
 
   useEffect(() => {
     if (id) {
-      const vid = Number(id)
-      dispatch(fetchVehicleById(vid))
-      loadHistory(vid)
+      dispatch(fetchAgentById(Number(id)))
     }
   }, [id, dispatch])
 
-  const loadHistory = async (vid: number) => {
-    try {
-      setLoadingHistory(true)
-      const data = await vehicleService.getVehicleHistory(vid)
-      setHistory(data)
-    } catch (error) {
-      console.error('Error cargando historial:', error)
-    } finally {
-      setLoadingHistory(false)
-    }
-  }
-
   const refreshData = () => {
     if (id) {
-      dispatch(fetchVehicleById(Number(id)))
+      dispatch(fetchAgentById(Number(id)))
     }
   }
 
+  /**
+   * Handle file upload
+   */
   const handleUpload = async (file: File, description: string = '', isMainPhoto: boolean = false) => {
     if (!id) return
 
     try {
       setUploadingFile(true)
-      await fileService.uploadVehicleFile(Number(id), file, description, isMainPhoto)
+      await fileService.uploadAgentFile(Number(id), file, description, isMainPhoto)
       messageApi.success('Archivo subido exitosamente')
       setIsPhotoModalVisible(false)
       refreshData()
@@ -75,6 +58,9 @@ const VehicleDetailPage: React.FC = () => {
     }
   }
 
+  /**
+   * Handle file deletion
+   */
   const handleDeleteFile = (fileId: number) => {
     Modal.confirm({
       title: '¿Eliminar archivo?',
@@ -84,7 +70,7 @@ const VehicleDetailPage: React.FC = () => {
       cancelText: 'Cancelar',
       onOk: async () => {
         try {
-          await fileService.deleteVehicleFile(Number(id), fileId)
+          await fileService.deleteAgentFile(Number(id), fileId)
           message.success('Archivo eliminado')
           refreshData()
         } catch (error: any) {
@@ -94,10 +80,13 @@ const VehicleDetailPage: React.FC = () => {
     })
   }
 
+  /**
+   * Handle setting main photo
+   */
   const handleSetMainPhoto = async (fileId: number) => {
     if (!id) return
     try {
-      await fileService.setMainVehiclePhoto(Number(id), fileId)
+      await fileService.setMainAgentPhoto(Number(id), fileId)
       messageApi.success('Foto principal actualizada')
       refreshData()
     } catch (error: any) {
@@ -105,7 +94,7 @@ const VehicleDetailPage: React.FC = () => {
     }
   }
 
-  if (loading || !vehicle) {
+  if (loading || !agent) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', padding: '50px' }}>
         <Spin size="large" />
@@ -113,71 +102,19 @@ const VehicleDetailPage: React.FC = () => {
     )
   }
 
-  const files = vehicle.files || []
+  const files = agent.files || []
   const imageFiles = files.filter((f) => f.mime_type?.startsWith('image/'))
   const mainPhoto = imageFiles.find((f) => f.is_main_photo === 1)
   const otherPhotos = imageFiles.filter((f) => f.is_main_photo === 0)
-
-  const historyColumns = [
-    {
-      title: 'Orden #',
-      dataIndex: 'order_number',
-      key: 'order_number',
-      render: (text: string, record: any) => (
-        <Button
-          type="link"
-          onClick={() => navigate(`/orders/${record.id}`)}
-          style={{ padding: 0 }}
-        >
-          {text}
-        </Button>
-      )
-    },
-    {
-      title: 'Fecha',
-      dataIndex: 'created_at',
-      key: 'created_at',
-      render: (date: string) => dayjs(date).format('DD/MM/YYYY HH:mm'),
-    },
-    {
-      title: 'Origen',
-      dataIndex: 'origin_city_code',
-      key: 'origin_city_code',
-    },
-    {
-      title: 'Destino',
-      dataIndex: 'destination_city_code',
-      key: 'destination_city_code',
-    },
-    {
-      title: 'Estado',
-      dataIndex: 'status_name',
-      key: 'status_name',
-      render: (name: string) => <Tag>{name}</Tag>
-    },
-    {
-      title: 'Acciones',
-      key: 'actions',
-      render: (_: any, record: any) => (
-        <Button
-          icon={<EyeOutlined />}
-          size="small"
-          onClick={() => navigate(`/orders/${record.id}`)}
-        >
-          Ver Orden
-        </Button>
-      )
-    }
-  ]
 
   return (
     <div>
       {contextHolder}
       <PageHeader
-        title={`Vehículo: ${vehicle.license_plate}`}
+        title={`Escolta: ${agent.name}`}
         extra={
           <Space>
-            <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/vehicles')}>
+            <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/agents')}>
               Volver
             </Button>
             <Button type="primary" icon={<EditOutlined />}>
@@ -197,35 +134,36 @@ const VehicleDetailPage: React.FC = () => {
               children: (
                 <>
                   <Descriptions bordered column={2}>
-                    <Descriptions.Item label="ID">{vehicle.id}</Descriptions.Item>
-                    <Descriptions.Item label="Placa">{vehicle.license_plate}</Descriptions.Item>
-                    <Descriptions.Item label="Marca">{vehicle.brand}</Descriptions.Item>
-                    <Descriptions.Item label="Tipo">{vehicle.vehicle_type}</Descriptions.Item>
-                    <Descriptions.Item label="Año">{vehicle.model_year}</Descriptions.Item>
-                    <Descriptions.Item label="Color">{vehicle.color}</Descriptions.Item>
-                    <Descriptions.Item label="Capacidad">{vehicle.capacity || '-'}</Descriptions.Item>
-                    <Descriptions.Item label="Contenedor">{vehicle.container || '-'}</Descriptions.Item>
-                    <Descriptions.Item label="Cliente" span={2}>
-                      {vehicle.client?.company_name || '-'}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Números de Serie" span={2}>
-                      {vehicle.serial_numbers || '-'}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Tipo de Vehículo">
-                      <Tag color={vehicle.is_escort_vehicle ? 'blue' : 'default'}>
-                        {vehicle.is_escort_vehicle ? 'Escolta' : 'Normal'}
-                      </Tag>
+                    <Descriptions.Item label="ID">{agent.id}</Descriptions.Item>
+                    <Descriptions.Item label="Nombre">{agent.name}</Descriptions.Item>
+                    <Descriptions.Item label="Documento">{agent.document_id}</Descriptions.Item>
+                    <Descriptions.Item label="Móvil">{agent.mobile}</Descriptions.Item>
+                    <Descriptions.Item label="Vehículo Asignado" span={2}>
+                      {agent.vehicle ? (
+                        <span>
+                          {agent.vehicle.license_plate} - {agent.vehicle.brand} {agent.vehicle.vehicle_type}
+                          <Button
+                            type="link"
+                            size="small"
+                            onClick={() => navigate(`/vehicles/${agent.vehicle_id}`)}
+                          >
+                            Ver detalles
+                          </Button>
+                        </span>
+                      ) : (
+                        '-'
+                      )}
                     </Descriptions.Item>
                     <Descriptions.Item label="Estado">
-                      <Tag color={vehicle.is_active ? 'green' : 'red'}>
-                        {vehicle.is_active ? 'Activo' : 'Inactivo'}
+                      <Tag color={agent.is_active ? 'green' : 'red'}>
+                        {agent.is_active ? 'Activo' : 'Inactivo'}
                       </Tag>
                     </Descriptions.Item>
                     <Descriptions.Item label="Fecha de Creación">
-                      {dayjs(vehicle.created_at).format('DD/MM/YYYY HH:mm')}
+                      {dayjs(agent.created_at).format('DD/MM/YYYY HH:mm')}
                     </Descriptions.Item>
-                    <Descriptions.Item label="Última Actualización">
-                      {vehicle.updated_at ? dayjs(vehicle.updated_at).format('DD/MM/YYYY HH:mm') : '-'}
+                    <Descriptions.Item label="Última Actualización" span={2}>
+                      {agent.updated_at ? dayjs(agent.updated_at).format('DD/MM/YYYY HH:mm') : '-'}
                     </Descriptions.Item>
                   </Descriptions>
 
@@ -321,24 +259,14 @@ const VehicleDetailPage: React.FC = () => {
             },
             {
               key: '2',
-              label: 'Historial de Servicios',
-              children: (
-                <Table
-                  columns={historyColumns}
-                  dataSource={history}
-                  rowKey="id"
-                  loading={loadingHistory}
-                  pagination={{ pageSize: 10 }}
-                />
-              ),
-            },
-            {
-              key: '3',
               label: 'Archivos y Documentos',
               children: (
                 <Space direction="vertical" style={{ width: '100%' }}>
                   <Upload
-                    beforeUpload={handleUpload as any}
+                    beforeUpload={(file) => {
+                      handleUpload(file, '', false)
+                      return false
+                    }}
                     showUploadList={false}
                     disabled={uploadingFile}
                   >
@@ -398,4 +326,4 @@ const VehicleDetailPage: React.FC = () => {
   )
 }
 
-export default VehicleDetailPage
+export default AgentDetailPage
