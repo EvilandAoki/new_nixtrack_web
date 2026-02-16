@@ -7,6 +7,7 @@ import {
   CarOutlined,
   UserSwitchOutlined,
   FileTextOutlined,
+  ShopOutlined,
 } from '@ant-design/icons'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAppSelector } from '@/store/hooks'
@@ -25,7 +26,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
   const { user } = useAppSelector((state) => state.auth)
 
   const isAdmin = user?.role_id === ROLES.ADMIN
-  const isAdminClient = user?.role_id === ROLES.SUPERVISOR
+  const isOperator = user?.role_id === ROLES.OPERATOR
 
   const allMenuItems = [
     {
@@ -38,7 +39,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
       key: 'administration',
       icon: <TeamOutlined />,
       label: 'Administración',
-      visible: isAdmin || isAdminClient,
+      visible: isAdmin || isOperator,
       children: [
         {
           key: '/users',
@@ -48,21 +49,21 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
         },
         {
           key: '/clients',
-          icon: <TeamOutlined />,
+          icon: <ShopOutlined />,
           label: 'Clientes',
-          visible: isAdmin,
+          visible: isAdmin || isOperator,
         },
         {
           key: '/vehicles',
           icon: <CarOutlined />,
           label: 'Vehículos',
-          visible: isAdmin || isAdminClient,
+          visible: isAdmin || isOperator,
         },
         {
           key: '/agents',
           icon: <UserSwitchOutlined />,
           label: 'Escoltas',
-          visible: isAdmin || isAdminClient,
+          visible: isAdmin || isOperator,
         },
       ],
     },

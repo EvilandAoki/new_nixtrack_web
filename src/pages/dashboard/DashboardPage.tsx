@@ -41,7 +41,9 @@ const DashboardPage: React.FC = () => {
   }, [error, dispatch])
 
   const loadData = () => {
-    const clientId = user?.role_id === 1 ? undefined : user?.client_id
+    // Admin (1), Supervisor (2), and Operator (3) see all data
+    const canViewAll = [1, 2, 3].includes(user?.role_id || 0)
+    const clientId = canViewAll ? undefined : user?.client_id
     dispatch(fetchActiveOrders(clientId))
   }
 

@@ -1,9 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
 import type { ApiError } from '@/types'
-import { env } from '@/config/env'
 
-const baseURL = env.apiBaseUrl
-
+const baseURL = 'https://nixtrack.ingeniosoft.net/api'
 // Create axios instance
 export const axiosInstance = axios.create({
   baseURL,

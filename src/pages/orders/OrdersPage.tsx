@@ -48,8 +48,9 @@ const OrdersPage: React.FC = () => {
       filters.date_to = dateRange[1]
     }
 
-    // Si no es admin, filtrar por cliente
-    if (user && user.role_id !== 1) {
+    // Si no es admin/operador/supervisor, filtrar por cliente
+    // Roles exentos: Admin (1), Supervisor (2), Operador (3)
+    if (user && user.client_id && ![1, 2, 3].includes(user.role_id)) {
       filters.client_id = user.client_id
     }
 

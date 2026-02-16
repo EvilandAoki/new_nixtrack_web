@@ -18,6 +18,7 @@ import {
   PlusOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
+  EditOutlined,
 } from '@ant-design/icons'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
@@ -26,6 +27,7 @@ import { fetchOrderDetails } from '@/features/orders/orderDetailsSlice'
 import { ORDER_STATUS } from '@/types'
 import PageHeader from '@/components/common/PageHeader'
 import OrderDetailFormModal from './OrderDetailFormModal'
+import OrderEditModal from './OrderEditModal'
 import dayjs from 'dayjs'
 
 const { TabPane } = Tabs
@@ -38,10 +40,12 @@ const OrderDetailPage: React.FC = () => {
 
   const { selected: order, loading } = useAppSelector((state) => state.orders)
   const { items: details = [], loading: loadingDetails } = useAppSelector((state) => state.orderDetails)
+  const { user } = useAppSelector((state) => state.auth)
 
   const [detailModalVisible, setDetailModalVisible] = useState(false)
   const [finalizeModalVisible, setFinalizeModalVisible] = useState(false)
   const [cancelModalVisible, setCancelModalVisible] = useState(false)
+  const [editModalVisible, setEditModalVisible] = useState(false)
   const [finalizeForm] = Form.useForm()
   const [cancelForm] = Form.useForm()
 
@@ -189,6 +193,13 @@ const OrderDetailPage: React.FC = () => {
           </TabPane>
 
           <TabPane tab="Información General" key="2">
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+              {user && (user.role_id === 1 || user.role_id === 3) && (
+                <Button icon={<EditOutlined />} onClick={() => setEditModalVisible(true)}>
+                  Editar Información
+                </Button>
+              )}
+            </div>
             <Descriptions bordered column={2}>
               <Descriptions.Item label="# Orden">{order.order_number}</Descriptions.Item>
               <Descriptions.Item label="# Manifiesto">{order.manifest_number}</Descriptions.Item>
@@ -233,6 +244,14 @@ const OrderDetailPage: React.FC = () => {
           visible={detailModalVisible}
           orderId={order.id}
           onClose={handleDetailModalClose}
+        />
+      )}
+
+      {order && (
+        <OrderEditModal
+          visible={editModalVisible}
+          order={order}
+          onClose={() => setEditModalVisible(false)}
         />
       )}
 
