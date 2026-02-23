@@ -69,7 +69,12 @@ const dashboardSlice = createSlice({
     })
     builder.addCase(fetchActiveOrders.fulfilled, (state, action) => {
       state.isLoading = false
-      state.activeOrders = action.payload
+      state.activeOrders = action.payload.sort((a: Order, b: Order) => {
+        const priority: Record<string, number> = { red: 1, yellow: 2, green: 3 };
+        const pA = priority[a.status_level || ''] || 4;
+        const pB = priority[b.status_level || ''] || 4;
+        return pA - pB;
+      });
       state.lastUpdate = new Date().toISOString()
       state.error = null
     })

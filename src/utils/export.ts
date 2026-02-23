@@ -2,19 +2,33 @@ import * as XLSX from 'xlsx'
 
 export const exportToExcel = (data: any[], filename: string, sheetName: string = 'Hoja1') => {
   try {
-    // Create workbook and worksheet
+    // Generar libro y hoja
     const wb = XLSX.utils.book_new()
     const ws = XLSX.utils.json_to_sheet(data)
 
-    // Add worksheet to workbook
     XLSX.utils.book_append_sheet(wb, ws, sheetName)
 
-    // Generate filename with timestamp
+    // Escribir en un ArrayBuffer
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
+    const EXCEL_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8'
+    const dataBlob = new Blob([excelBuffer], { type: EXCEL_TYPE })
+
     const timestamp = new Date().toISOString().split('T')[0]
     const fullFilename = `${filename}_${timestamp}.xlsx`
 
-    // Save file
-    XLSX.writeFile(wb, fullFilename)
+    // Crear un enlace de descarga manual (Vanilla JS) para asegurar la compatibilidad con el nombre
+    const url = window.URL.createObjectURL(dataBlob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', fullFilename)
+    document.body.appendChild(link)
+    link.click()
+
+    // Limpiar el DOM
+    if (link.parentNode) {
+      link.parentNode.removeChild(link)
+    }
+    window.URL.revokeObjectURL(url)
   } catch (error) {
     console.error('Error exporting to Excel:', error)
     throw error
@@ -29,7 +43,7 @@ export const printTable = (data: any[], title: string) => {
     }
 
     const headers = Object.keys(data[0] || {})
-    
+
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -58,14 +72,14 @@ export const printTable = (data: any[], title: string) => {
             </thead>
             <tbody>
               ${data
-                .map(
-                  (row) => `
+        .map(
+          (row) => `
                 <tr>
                   ${headers.map((header) => `<td>${row[header] || ''}</td>`).join('')}
                 </tr>
               `
-                )
-                .join('')}
+        )
+        .join('')}
             </tbody>
           </table>
         </body>
@@ -75,7 +89,7 @@ export const printTable = (data: any[], title: string) => {
     printWindow.document.write(htmlContent)
     printWindow.document.close()
     printWindow.focus()
-    
+
     setTimeout(() => {
       printWindow.print()
       printWindow.close()

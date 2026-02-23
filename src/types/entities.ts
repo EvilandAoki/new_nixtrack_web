@@ -116,7 +116,7 @@ export interface Order {
   origin_city_code: string
   destination_city_code: string
   route_description: string
-  status_level: 'verde' | 'amarillo' | 'rojo' | null // Semáforo
+  status_level: 'green' | 'yellow' | 'red' | null // Semáforo
   distance_km: number
   estimated_time: string
   restrictions: string

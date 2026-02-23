@@ -49,11 +49,11 @@ const DashboardPage: React.FC = () => {
 
   const getStatusLevelColor = (level: string | null) => {
     switch (level) {
-      case 'verde':
+      case 'green':
         return 'green'
-      case 'amarillo':
+      case 'yellow':
         return 'yellow'
-      case 'rojo':
+      case 'red':
         return 'red'
       default:
         return 'default'
@@ -62,11 +62,11 @@ const DashboardPage: React.FC = () => {
 
   const getStatusLevelText = (level: string | null) => {
     switch (level) {
-      case 'verde':
+      case 'green':
         return 'Al Día'
-      case 'amarillo':
+      case 'yellow':
         return 'En Espera'
-      case 'rojo':
+      case 'red':
         return 'Sin Reporte'
       default:
         return 'Sin Información'
@@ -157,9 +157,9 @@ const DashboardPage: React.FC = () => {
   // Mock stats - will be calculated when backend endpoint is available
   const stats = {
     active: activeOrders.length,
-    onTime: activeOrders.filter((o) => o.status_level === 'verde').length,
-    delayed: activeOrders.filter((o) => o.status_level === 'amarillo').length,
-    noReport: activeOrders.filter((o) => o.status_level === 'rojo').length,
+    onTime: activeOrders.filter((o) => o.status_level === 'green').length,
+    delayed: activeOrders.filter((o) => o.status_level === 'yellow').length,
+    noReport: activeOrders.filter((o) => o.status_level === 'red').length,
   }
 
   return (
@@ -238,6 +238,11 @@ const DashboardPage: React.FC = () => {
           dataSource={activeOrders}
           loading={isLoading}
           rowKey="id"
+          rowClassName={(record) => {
+            if (record.status_level === 'yellow') return 'table-row-yellow'
+            if (record.status_level === 'red') return 'table-row-red'
+            return ''
+          }}
           pagination={{ pageSize: 10, showSizeChanger: false }}
           scroll={{ x: 'max-content' }}
           locale={{

@@ -1,20 +1,26 @@
 import React, { useEffect, useState } from 'react'
-import { Card, Button, Table, Space, Input, Select, Tag, Modal, DatePicker } from 'antd'
+import { Card, Button, Table, Space, Input, Select, Tag, Modal, DatePicker, message } from 'antd'
 import {
   PlusOutlined,
   EyeOutlined,
   SearchOutlined,
   ExclamationCircleOutlined,
   DeleteOutlined,
+  DownloadOutlined,
+  ClearOutlined,
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { fetchOrders, deleteOrder } from '@/features/orders/ordersSlice'
-import type { Order } from '@/types'
+import type { Order, Client } from '@/types'
 import { ORDER_STATUS } from '@/types'
+import { clientService } from '@/api/services/client.service'
+import { orderService } from '@/api/services/order.service'
+import { exportToExcel } from '@/utils/export'
 import PageHeader from '@/components/common/PageHeader'
 import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
+import '../dashboard/dashboard.css'
 
 const { Search } = Input
 const { Option } = Select
@@ -29,10 +35,25 @@ const OrdersPage: React.FC = () => {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<number | undefined>(undefined)
   const [dateRange, setDateRange] = useState<[string, string] | null>(null)
+  const [companyFilter, setCompanyFilter] = useState<number | undefined>(undefined)
+  const [clients, setClients] = useState<Client[]>([])
+  const [exporting, setExporting] = useState(false)
 
   useEffect(() => {
     loadOrders()
+    loadClients()
   }, [])
+
+  const loadClients = async () => {
+    if (user && [1, 2, 3].includes(user.role_id)) {
+      try {
+        const response = await clientService.getClients({ limit: 1000 })
+        setClients(response.items || [])
+      } catch (error) {
+        console.error('Error cargando clientes:', error)
+      }
+    }
+  }
 
   const loadOrders = (params = {}) => {
     const filters: any = {
@@ -40,6 +61,7 @@ const OrdersPage: React.FC = () => {
       limit: pagination?.per_page || 15,
       search,
       status_id: statusFilter,
+      client_id: companyFilter,
       ...params,
     }
 
@@ -81,6 +103,98 @@ const OrdersPage: React.FC = () => {
     }
   }
 
+  const handleCompanyFilterChange = (value: number | undefined) => {
+    setCompanyFilter(value)
+    loadOrders({ client_id: value, page: 1 })
+  }
+
+  const handleResetFilters = () => {
+    setSearch('')
+    setStatusFilter(undefined)
+    setDateRange(null)
+    setCompanyFilter(undefined)
+
+    const defaultFilters: any = {
+      page: 1,
+      limit: pagination?.per_page || 15,
+      search: undefined,
+      status_id: undefined,
+      client_id: undefined,
+      date_from: undefined,
+      date_to: undefined,
+    }
+
+    if (user && user.client_id && ![1, 2, 3].includes(user.role_id)) {
+      defaultFilters.client_id = user.client_id
+    }
+
+    dispatch(fetchOrders(defaultFilters))
+  }
+
+  const handleExportExcel = async () => {
+    try {
+      setExporting(true)
+
+      const hasFilters = search || statusFilter || dateRange || companyFilter
+      let dataToExport: Order[] = []
+
+      if (hasFilters) {
+        const filters: any = {
+          limit: 100000,
+          search,
+          status_id: statusFilter,
+          client_id: companyFilter,
+        }
+
+        if (dateRange) {
+          filters.date_from = dateRange[0]
+          filters.date_to = dateRange[1]
+        }
+
+        if (user && user.client_id && ![1, 2, 3].includes(user.role_id)) {
+          filters.client_id = user.client_id
+        }
+
+        const response = await orderService.getOrders(filters)
+        dataToExport = response.items || []
+      } else {
+        dataToExport = items
+      }
+
+      const getStatusText = (statusId: number) => {
+        const statusMap: Record<number, string> = {
+          [ORDER_STATUS.PENDING]: 'Planeado',
+          [ORDER_STATUS.IN_TRANSIT]: 'Activo',
+          [ORDER_STATUS.AT_CHECKPOINT]: 'En Punto',
+          [ORDER_STATUS.DELIVERED]: 'Finalizado',
+          [ORDER_STATUS.CANCELLED]: 'Cancelado',
+          [ORDER_STATUS.DELAYED]: 'Retrasado',
+          [ORDER_STATUS.INCIDENT]: 'Incidente',
+        }
+        return statusMap[statusId] || 'Desconocido'
+      }
+
+      const formattedData = dataToExport.map((order) => ({
+        'Orden #': order.order_number,
+        Cliente: order.client?.company_name || '-',
+        Vehículo: order.vehicle?.license_plate || '-',
+        Origen: order.origin_city?.name || '-',
+        Destino: order.destination_city?.name || '-',
+        'Fecha Salida': order.departure_at ? dayjs(order.departure_at).format('DD/MM/YYYY HH:mm') : '-',
+        Estado: getStatusText(order.status_id),
+      }))
+
+      exportToExcel(formattedData, 'seguimientos', 'Órdenes')
+
+      message.success('Excel exportado correctamente')
+    } catch (error) {
+      console.error('Error exportando a Excel:', error)
+      message.error('Ocurrió un error al exportar el Excel')
+    } finally {
+      setExporting(false)
+    }
+  }
+
   const handleTableChange = (pagination: any) => {
     loadOrders({ page: pagination.current, limit: pagination.pageSize })
   }
@@ -118,15 +232,6 @@ const OrdersPage: React.FC = () => {
     return <Tag color={status.color}>{status.label}</Tag>
   }
 
-  const getStatusLevelTag = (level: string | null) => {
-    if (!level) return <Tag>-</Tag>
-    const colorMap: Record<string, string> = {
-      verde: 'green',
-      amarillo: 'orange',
-      rojo: 'red',
-    }
-    return <Tag color={colorMap[level]}>{level.toUpperCase()}</Tag>
-  }
 
   const columns: ColumnsType<Order> = [
     {
@@ -179,13 +284,6 @@ const OrdersPage: React.FC = () => {
       width: 110,
     },
     {
-      title: 'Semáforo',
-      dataIndex: 'status_level',
-      key: 'status_level',
-      render: (level) => getStatusLevelTag(level),
-      width: 100,
-    },
-    {
       title: 'Acciones',
       key: 'actions',
       fixed: 'right',
@@ -224,9 +322,28 @@ const OrdersPage: React.FC = () => {
                 allowClear
                 style={{ width: 320 }}
                 onSearch={handleSearch}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
                 loading={loading}
                 enterButton={<SearchOutlined />}
               />
+              {user && [1, 2, 3].includes(user.role_id) && (
+                <Select
+                  placeholder="Empresa"
+                  allowClear
+                  showSearch
+                  optionFilterProp="children"
+                  style={{ width: 220 }}
+                  onChange={handleCompanyFilterChange}
+                  value={companyFilter}
+                >
+                  {clients.map(client => (
+                    <Option key={client.id_client} value={client.id_client}>
+                      {client.company_name}
+                    </Option>
+                  ))}
+                </Select>
+              )}
               <Select
                 placeholder="Estado"
                 allowClear
@@ -243,15 +360,26 @@ const OrdersPage: React.FC = () => {
                 style={{ width: 260 }}
                 format="DD/MM/YYYY"
                 onChange={handleDateRangeChange}
+                value={dateRange ? [dayjs(dateRange[0]), dayjs(dateRange[1])] : null}
                 placeholder={['Fecha desde', 'Fecha hasta']}
+              />
+              <Button
+                icon={<ClearOutlined />}
+                onClick={handleResetFilters}
+                title="Limpiar Filtros"
               />
             </Space>
 
-            {user?.role_id === 1 && (
-              <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/orders/new')}>
-                Nueva Orden
+            <Space>
+              {user?.role_id === 1 && (
+                <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/orders/new')}>
+                  Nueva Orden
+                </Button>
+              )}
+              <Button icon={<DownloadOutlined />} onClick={handleExportExcel} loading={exporting}>
+                Exportar Excel
               </Button>
-            )}
+            </Space>
           </Space>
         </Space>
 
@@ -260,6 +388,11 @@ const OrdersPage: React.FC = () => {
           dataSource={items}
           loading={loading}
           rowKey="id"
+          rowClassName={(record) => {
+            if (record.status_level === 'yellow') return 'table-row-yellow'
+            if (record.status_level === 'red') return 'table-row-red'
+            return ''
+          }}
           pagination={{
             current: pagination?.current_page || 1,
             pageSize: pagination?.per_page || 15,

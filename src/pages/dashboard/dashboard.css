@@ -22,3 +22,31 @@
     gap: 12px;
   }
 }
+
+/* Status level row highlighting */
+.table-row-green td {
+  background-color: #f6ffed !important;
+}
+.table-row-green td:first-child {
+  border-left: 4px solid #52c41a !important;
+}
+
+.table-row-yellow td {
+  background-color: #fffbe6 !important;
+}
+.table-row-yellow td:first-child {
+  border-left: 4px solid #faad14 !important;
+}
+
+.table-row-red td {
+  background-color: #fff2f0 !important;
+}
+.table-row-red td:first-child {
+  border-left: 4px solid #ff4d4f !important;
+}
+
+.table-row-red:hover td,
+.table-row-yellow:hover td,
+.table-row-green:hover td {
+  filter: brightness(0.97);
+}
